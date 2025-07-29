@@ -1,11 +1,15 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { handleMondayWebhook } from './controllers/mondayController';
 import { handleQaseWebhook } from './controllers/qaseController';
 
 const router = Router();
 
-// ✅ Endpoint de verificação do Monday
-router.get('/monday', (req, res) => {
+// ✅ Validação do Monday (com "challenge")
+router.get('/monday', (req: Request, res: Response) => {
+  const challenge = req.query.challenge as string;
+  if (challenge) {
+    return res.status(200).send(challenge);
+  }
   res.status(200).send('Webhook OK');
 });
 
