@@ -1,27 +1,27 @@
 import { Request, Response } from 'express';
-import { saveMapping } from '../services/mondayQaseService';
+import pool from '../db';
 
-export const handleMondayWebhook = async (req: Request, res: Response) => {
-  try {
-    const { event } = req.body;
+export const saveMapping = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { testPlanId, itemId } = req.body;
 
-    if (!event) {
-      return res.status(400).json({ error: 'Payload inválido' });
+        if (!testPlanId || !itemId) {
+            res.status(400).json({ error: 'testPlanId e itemId são obrigatórios.' });
+            return;
+        }
+
+        const query = `
+            INSERT INTO monday_qase_mapping (test_plan_id, item_id)
+            VALUES ($1, $2)
+            ON CONFLICT (test_plan_id)
+            DO UPDATE SET item_id = EXCLUDED.item_id;
+        `;
+
+        await pool.query(query, [testPlanId, itemId]);
+
+        res.status(200).json({ message: 'Mapeamento salvo/atualizado com sucesso!' });
+    } catch (error) {
+        console.error('Erro ao salvar mapeamento:', error);
+        res.status(500).json({ error: 'Erro interno no servidor.' });
     }
-
-    const itemId = event.pulseId;
-    const testPlanId =
-      event.value && typeof event.value === 'object'
-        ? event.value.value
-        : event.value;
-
-    console.log(`Recebido do Monday -> itemId: ${itemId}, testPlanId: ${testPlanId}`);
-
-    await saveMapping(testPlanId, itemId);
-
-    return res.status(200).json({ message: 'Mapeamento salvo no banco', itemId, testPlanId });
-  } catch (error) {
-    console.error('Erro no webhook do Monday:', error);
-    return res.status(500).json({ error: 'Erro interno' });
-  }
 };
