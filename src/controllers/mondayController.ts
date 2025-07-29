@@ -1,15 +1,22 @@
 import { Request, Response } from 'express';
-import { saveMapping } from '../utils/storage';
 
 export const handleMondayWebhook = (req: Request, res: Response) => {
-    const { itemId, testPlanId } = req.body;
+  try {
+    const { event } = req.body;
 
-    if (!itemId || !testPlanId) {
-        return res.status(400).json({ message: 'Faltando itemId ou testPlanId' });
+    if (!event) {
+      return res.status(400).json({ error: 'Payload inválido' });
     }
 
-    saveMapping(itemId, testPlanId);
+    const itemId = event.pulseId; // ID do item no board
+    const testPlanId = event.value; // Novo valor da coluna alterada
 
-    console.log(`Mapeado Item ${itemId} -> TestPlan ${testPlanId}`);
-    return res.status(200).json({ message: 'Relação salva com sucesso' });
+    console.log(`Recebido do Monday -> itemId: ${itemId}, testPlanId: ${testPlanId}`);
+
+    // Aqui você pode salvar no banco ou fazer a lógica que precisar
+    return res.status(200).json({ message: 'Webhook recebido', itemId, testPlanId });
+  } catch (error) {
+    console.error('Erro no webhook do Monday:', error);
+    return res.status(500).json({ error: 'Erro interno' });
+  }
 };
