@@ -35,10 +35,12 @@ export const handleQaseWebhook = async (req: Request, res: Response): Promise<vo
         const pdfUrl = `https://api.qase.io/v1/run/${runId}/report?format=pdf`;
         const pdfPath = path.resolve(__dirname, `../../reports/qase-report-${runId}.pdf`);
 
-        const pdfResponse = await axios.get(pdfUrl, {
-            headers: { 'Token': QASE_API_TOKEN },
-            responseType: 'arraybuffer'
-        });
+       const pdfResponse = await axios.get(pdfUrl, {
+    headers: {
+        'Authorization': `Token ${QASE_API_TOKEN}`
+    },
+    responseType: 'arraybuffer'
+});
 
         fs.writeFileSync(pdfPath, pdfResponse.data);
 
