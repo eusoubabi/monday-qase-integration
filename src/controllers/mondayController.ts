@@ -16,6 +16,7 @@ export const handleMondayWebhook = (req: Request, res: Response) => {
 
     console.log(`Recebido do Monday -> itemId: ${itemId}, testPlanId: ${testPlanId}`);
 
+    // Aqui você pode salvar essa relação no banco se precisar
     return res.status(200).json({ message: 'Webhook recebido', itemId, testPlanId });
   } catch (error) {
     console.error('Erro no webhook do Monday:', error);
