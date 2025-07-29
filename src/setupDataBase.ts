@@ -4,7 +4,7 @@ export async function setupDatabase() {
     const createTableQuery = `
         CREATE TABLE IF NOT EXISTS monday_qase_mapping (
             id SERIAL PRIMARY KEY,
-            test_plan_id VARCHAR(50) NOT NULL,
+            test_plan_id VARCHAR(50) UNIQUE NOT NULL,
             item_id VARCHAR(50) NOT NULL
         );
     `;
@@ -17,5 +17,4 @@ export async function setupDatabase() {
     }
 }
 
-// Se quiser usar como default export:
 export default setupDatabase;
