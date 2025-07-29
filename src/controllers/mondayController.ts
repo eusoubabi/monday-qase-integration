@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
+import { saveMapping } from '../services/mondayQaseService';
 
-export const handleMondayWebhook = (req: Request, res: Response) => {
+export const handleMondayWebhook = async (req: Request, res: Response) => {
   try {
     const { event } = req.body;
 
@@ -16,8 +17,9 @@ export const handleMondayWebhook = (req: Request, res: Response) => {
 
     console.log(`Recebido do Monday -> itemId: ${itemId}, testPlanId: ${testPlanId}`);
 
-    // Aqui você pode salvar essa relação no banco se precisar
-    return res.status(200).json({ message: 'Webhook recebido', itemId, testPlanId });
+    await saveMapping(testPlanId, itemId);
+
+    return res.status(200).json({ message: 'Mapeamento salvo no banco', itemId, testPlanId });
   } catch (error) {
     console.error('Erro no webhook do Monday:', error);
     return res.status(500).json({ error: 'Erro interno' });

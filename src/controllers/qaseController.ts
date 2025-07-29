@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
-import FormData from 'form-data';
+import fs from 'fs';
+import path from 'path';
+import { getItemIdByTestPlan } from '../services/mondayQaseService';
+import { uploadToMonday } from '../services/mondayUploadService';
 
 export const handleQaseWebhook = async (req: Request, res: Response) => {
   try {
@@ -10,36 +13,32 @@ export const handleQaseWebhook = async (req: Request, res: Response) => {
       return res.status(200).json({ message: 'Evento ignorado' });
     }
 
-    console.log(`Run ${run.id} finalizado no projeto ${project.code}`);
+    const testPlanId = run.test_plan_id;
+    console.log(`Run ${run.id} finalizado no projeto ${project.code}, testPlanId: ${testPlanId}`);
 
-    // ✅ Passo 1: Baixar relatório do Qase
+    const itemId = await getItemIdByTestPlan(testPlanId);
+    if (!itemId) {
+      console.error(`Nenhum item encontrado para testPlanId: ${testPlanId}`);
+      return res.status(404).json({ error: 'Mapeamento não encontrado' });
+    }
+
+    // Baixar relatório do Qase
     const reportUrl = `https://api.qase.io/v1/report/${project.code}/${run.id}?format=pdf`;
     const reportResponse = await axios.get(reportUrl, {
       headers: { 'Token': process.env.QASE_API_KEY },
       responseType: 'arraybuffer'
     });
 
-    const buffer = Buffer.from(reportResponse.data);
+    const filePath = path.join('/tmp', `testrun-${run.id}.pdf`);
+    fs.writeFileSync(filePath, reportResponse.data);
 
-    // ✅ Passo 2: Upload para o Monday
-    // Aqui você precisa saber qual item no Monday receberá o arquivo
-    // Exemplo: supomos que a relação itemId <-> testPlanId está salva
-    const itemId = 9687041827; // <-- depois vamos buscar dinamicamente
+    // Upload no Monday
+    await uploadToMonday(itemId, filePath);
 
-    const formData = new FormData();
-    formData.append('file', buffer, { filename: `testrun-${run.id}.pdf` });
-    formData.append('item_id', String(itemId));
+    // Remover arquivo temporário
+    fs.unlinkSync(filePath);
 
-    await axios.post('https://api.monday.com/v2/file', formData, {
-      headers: {
-        Authorization: process.env.MONDAY_API_KEY!,
-        ...formData.getHeaders()
-      }
-    });
-
-    console.log(`Relatório do Run ${run.id} anexado ao item ${itemId} no Monday`);
-
-    return res.status(200).json({ message: 'Webhook processado com sucesso' });
+    return res.status(200).json({ message: 'Relatório anexado com sucesso' });
   } catch (error) {
     console.error('Erro ao processar webhook do Qase:', error);
     return res.status(500).json({ error: 'Erro interno' });
