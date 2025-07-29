@@ -3,17 +3,20 @@ import pool from '../db';
 
 export const saveMapping = async (req: Request, res: Response): Promise<void> => {
     try {
-        // ✅ Passo 1: Verificar se é o desafio do Monday
+        // ✅ Passo 1: Responder rápido se for desafio do Monday
         if (req.body.challenge) {
             res.status(200).json({ challenge: req.body.challenge });
             return;
         }
 
-        // ✅ Passo 2: Fluxo normal para salvar o mapeamento
+        // ✅ Passo 2: Responder ao webhook imediatamente
+        res.status(200).json({ message: 'Webhook recebido com sucesso' });
+
+        // ✅ Passo 3: Processar dados em segundo plano
         const { testPlanId, itemId } = req.body;
 
         if (!testPlanId || !itemId) {
-            res.status(400).json({ error: 'testPlanId e itemId são obrigatórios.' });
+            console.warn('Webhook recebido com dados incompletos:', req.body);
             return;
         }
 
@@ -25,10 +28,8 @@ export const saveMapping = async (req: Request, res: Response): Promise<void> =>
         `;
 
         await pool.query(query, [testPlanId, itemId]);
-
-        res.status(200).json({ message: 'Mapeamento salvo/atualizado com sucesso!' });
+        console.log(`Mapeamento salvo para testPlanId=${testPlanId}, itemId=${itemId}`);
     } catch (error) {
-        console.error('Erro ao salvar mapeamento:', error);
-        res.status(500).json({ error: 'Erro interno no servidor.' });
+        console.error('Erro ao processar webhook do Monday:', error);
     }
 };
