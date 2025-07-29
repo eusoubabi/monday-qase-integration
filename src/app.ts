@@ -7,6 +7,12 @@ dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());
+
+// ✅ Health check para validação do Monday
+app.get('/', (req, res) => {
+  res.status(200).send('OK');
+});
+
 app.use('/webhook', routes);
 
 const PORT = process.env.PORT || 3000;
