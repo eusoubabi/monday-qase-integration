@@ -3,6 +3,13 @@ import pool from '../db';
 
 export const saveMapping = async (req: Request, res: Response): Promise<void> => {
     try {
+        // ✅ Passo 1: Verificar se é o desafio do Monday
+        if (req.body.challenge) {
+            res.status(200).json({ challenge: req.body.challenge });
+            return;
+        }
+
+        // ✅ Passo 2: Fluxo normal para salvar o mapeamento
         const { testPlanId, itemId } = req.body;
 
         if (!testPlanId || !itemId) {
