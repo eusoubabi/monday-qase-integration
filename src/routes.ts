@@ -4,23 +4,21 @@ import { handleQaseWebhook } from './controllers/qaseController';
 
 const router = Router();
 
-// ✅ Validação do Monday (GET e POST)
-router.get('/monday', (req: Request, res: Response) => {
-  const challenge = req.query.challenge as string;
-  if (challenge) {
-    return res.status(200).send(challenge);
-  }
-  res.status(400).send('Missing challenge');
-});
-
+// ✅ Rota para validação e recebimento do webhook do Monday
 router.post('/monday', (req: Request, res: Response) => {
-  const challenge = req.body.challenge;
+  const { challenge } = req.body;
+
+  // Validação do Monday: precisa retornar o challenge puro
   if (challenge) {
+    res.setHeader('Content-Type', 'text/plain');
     return res.status(200).send(challenge);
   }
+
+  // Caso não seja validação, segue fluxo normal
   return handleMondayWebhook(req, res);
 });
 
+// ✅ Rota do Qase
 router.post('/qase', handleQaseWebhook);
 
 export default router;
