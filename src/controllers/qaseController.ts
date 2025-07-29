@@ -33,7 +33,7 @@ export const handleQaseWebhook = async (req: Request, res: Response): Promise<vo
         const itemId = resultDb.rows[0].item_id;
 
         // 2. Baixar relatório PDF do Qase
-        const pdfUrl = `https://api.qase.io/v1/${QASE_PROJECT_CODE}/run/${runId}/report?format=pdf`;
+        const pdfUrl = `https://api.qase.io/v1/run/${runId}/report?format=pdf`;
         const pdfPath = path.resolve(__dirname, `../../reports/qase-report-${runId}.pdf`);
 
         const pdfResponse = await axios.get(pdfUrl, {
